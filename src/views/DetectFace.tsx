@@ -1,58 +1,53 @@
 import Camera from "@/components/Camera";
-import { useEffect, useRef, useState } from "react";
-import * as faceapi from "face-api.js";
+import { useFaceDetection } from "@/hooks/FaceHooks";
+import { useEffect, useRef } from "react";
 
 const DetectFace = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [detection, setDetection] = useState<faceapi.FaceDetection | null>(
-    null
-  );
+  const { detection, getDescriptors } = useFaceDetection();
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const loadModels = async () => {
-      try {
-        await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
-        console.log("Models loaded");
-      } catch (error) {
-        console.error("Error loading models:", error);
-      }
-    };
     const detectFace = async () => {
-      if (videoRef.current) {
-        const result = await faceapi.detectSingleFace(
-          videoRef.current,
-          new faceapi.TinyFaceDetectorOptions()
-        );
+      try {
+        await getDescriptors(videoRef); // Start detecting faces
 
-        setDetection(result || null); // Update detection state
-      }
-
-      // Schedule the next detection
-      timer = setTimeout(detectFace, 100);
+        timer = setTimeout(detectFace, 100); // Schedule the next detection
+      } catch (error) {}
     };
+
+    // Initialize the video feed and start detection
     const startDetection = async () => {
       try {
         if (videoRef.current) {
           // Wait for the video element to be ready
           await new Promise<void>((resolve) => {
-            if (videoRef.current!.readyState >= 2) resolve();
-            else videoRef.current!.oncanplay = () => resolve();
+            if (videoRef.current!.readyState >= 2) {
+              console.log("first");
+              resolve();
+            } else {
+              videoRef.current!.oncanplay = () => {
+                console.log("secoind");
+                resolve();
+              };
+            }
           });
-
-          detectFace(); // Start detecting faces
+          detectFace(); // Start the detection loop
         }
       } catch (error) {
         console.error("Error initializing video feed:", error);
       }
     };
-    loadModels().then(startDetection);
+
+    startDetection();
+
     // Cleanup on unmount
     return () => {
       if (timer) clearTimeout(timer);
     };
   }, []);
+
+  console.log("descriptors", detection);
 
   return (
     <div>
