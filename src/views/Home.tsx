@@ -3,7 +3,11 @@ import { useStore } from "@/stores/DBStore";
 import { NavLink } from "react-router";
 
 const Home = () => {
-  const { faces, votes } = useStore();
+  const { faces, votes, deleteAllFromDB } = useStore();
+
+  const handleResetDB = () => {
+    deleteAllFromDB();
+  };
 
   console.log("kanta", faces, votes);
 
@@ -11,8 +15,8 @@ const Home = () => {
     <>
       <h1 className="text-center p-4 text-lg">Home</h1>
       <section className="text-center">
-        <p>Number of faces in database: X</p>
-        <p>Number of votes in database: Y</p>
+        <p>Number of faces in database: {faces.length}</p>
+        <p>Number of votes in database: {votes.length}</p>
       </section>
       <section className="p-4">
         <h3>Results</h3>
@@ -27,7 +31,7 @@ const Home = () => {
           <NavLink to={"/face"}>
             <Button>Start Voting</Button>
           </NavLink>
-          <Button>Reset Database</Button>
+          <Button onClick={handleResetDB}>Reset Database</Button>
         </div>
       </section>
     </>
